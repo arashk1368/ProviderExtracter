@@ -18,6 +18,7 @@ import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.hibernate.cfg.Configuration;
@@ -48,10 +49,13 @@ public class App {
             ServiceProviderDAO providerDAO = new ServiceProviderDAO();
             ServiceDescriptionDAO.openSession(v3Configuration);
 
+            fixProviders(providerDAO);
+
             for (ServiceDescription serviceDesc : serviceDescDAO.getWithoutProvider()) {
-                String domainUrl = URLExtracter.getDomainName(serviceDesc.getUrl());
-                ServiceProvider provider = new ServiceProvider(domainUrl);
+                String name = URLExtracter.getDomainName(serviceDesc.getUrl());
+                ServiceProvider provider = new ServiceProvider();
                 provider.setNumberOfServices(1);
+                provider.setName(name);
                 serviceDesc.setServiceProvider(addOrUpdateProvider(provider, providerDAO));
                 serviceDescDAO.saveOrUpdate(serviceDesc);
             }
@@ -69,14 +73,14 @@ public class App {
     }
 
     private static ServiceProvider addOrUpdateProvider(ServiceProvider serviceProvider, ServiceProviderDAO serviceProviderDAO) throws DAOException {
-        ServiceProvider inDB = serviceProviderDAO.findByUrl(serviceProvider.getUrl());
+        ServiceProvider inDB = serviceProviderDAO.findByName(serviceProvider.getName());
         if (inDB == null) {
-            LOGGER.log(Level.FINE, "There is no service provider in DB with URL = {0}, Saving a new one", serviceProvider.getUrl());
+            LOGGER.log(Level.FINE, "There is no service provider in DB with Name = {0}, Saving a new one", serviceProvider.getName());
             serviceProviderDAO.addServiceProvider(serviceProvider);
             savedProvidersNum++;
             return serviceProvider;
         } else {
-            LOGGER.log(Level.FINE, "Found the same provider url with ID = {0} in DB, Updating", inDB.getId());
+            LOGGER.log(Level.FINE, "Found the same provider name with ID = {0} in DB, Updating", inDB.getId());
             if (!serviceProvider.getCountry().isEmpty()) {
                 inDB.setCountry(inDB.getCountry().concat(TOKEN).concat(serviceProvider.getCountry()));
             }
@@ -86,10 +90,6 @@ public class App {
             }
             if (!serviceProvider.getExtraInfo().isEmpty()) {
                 inDB.setExtraInfo(inDB.getExtraInfo().concat(TOKEN).concat(serviceProvider.getExtraInfo()));
-
-            }
-            if (!serviceProvider.getName().isEmpty()) {
-                inDB.setName(inDB.getName().concat(TOKEN).concat(serviceProvider.getName()));
 
             }
             if (!serviceProvider.getTags().isEmpty()) {
@@ -128,6 +128,17 @@ public class App {
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
             return false;
+        }
+    }
+
+    private static void fixProviders(ServiceProviderDAO providerDAO) throws DAOException, URISyntaxException {
+        List<ServiceProvider> providers = providerDAO.getAll("ServiceProvider");
+        for (ServiceProvider provider : providers) {
+            if (provider.getName().isEmpty()) {
+                String name = URLExtracter.getDomainName(provider.getUrl());
+                provider.setName(name);
+                providerDAO.saveOrUpdate(provider);
+            }
         }
     }
 }
