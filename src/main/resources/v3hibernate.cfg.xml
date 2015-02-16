@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/service_repository_v3?zeroDateTimeBehavior=convertToNull</property>
+        <!--<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/service_repository_v3test?zeroDateTimeBehavior=convertToNull</property>-->
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">1234</property>
+        <!--<property name="hibernate.hbm2ddl.auto">create</property>-->
+        <mapping class="cloudservices.brokerage.crawler.crawlingcommons.model.entities.v3.ServiceDescription"/>
+        <mapping class="cloudservices.brokerage.crawler.crawlingcommons.model.entities.v3.ServiceDescriptionSnapshot"/>
+        <mapping class="cloudservices.brokerage.crawler.crawlingcommons.model.entities.v3.ServiceProvider"/>
+    </session-factory>
+</hibernate-configuration>
