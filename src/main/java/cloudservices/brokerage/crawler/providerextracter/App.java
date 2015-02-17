@@ -49,8 +49,8 @@ public class App {
             ServiceProviderDAO providerDAO = new ServiceProviderDAO();
             ServiceDescriptionDAO.openSession(v3Configuration);
 
-            fixProviders(providerDAO);
-
+//            fixProviders(providerDAO);
+//            fixSameNameProviders(providerDAO);
             for (ServiceDescription serviceDesc : serviceDescDAO.getWithoutProvider()) {
                 LOGGER.log(Level.FINE, "Service Description with ID : {0} Does not have provider, Updating", serviceDesc.getId());
                 String name = URLExtracter.getDomainName(serviceDesc.getUrl());
@@ -133,6 +133,7 @@ public class App {
         }
     }
 
+    // THIS IS NOT SAFE BECAUSE OF DUPLICATES IN NAMES!!!!
     private static void fixProviders(ServiceProviderDAO providerDAO) throws DAOException, URISyntaxException {
         LOGGER.log(Level.INFO, "Fixing Providers Start");
         List<ServiceProvider> providers = providerDAO.getWithoutName();
@@ -143,6 +144,33 @@ public class App {
                 provider.setName(name);
                 providerDAO.saveOrUpdate(provider);
             }
+        }
+    }
+
+    private static void fixSameNameProviders(ServiceProviderDAO providerDAO) throws DAOException {
+        LOGGER.log(Level.INFO, "Fixing Providers with the same name Start");
+        List<ServiceProvider> providers = providerDAO.getAll("ServiceProvider");
+        for (ServiceProvider provider : providers) {
+            try {
+                ServiceProvider sp = providerDAO.findByName(provider.getName());
+            } catch (DAOException ex) {
+                LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+            }
+//            if (sameNames.isEmpty()) {
+//                throw new DAOException("Service Provider with name : " + provider.getName() + " for provider with ID : " + provider.getId() + " is not available");
+//            } else if (sameNames.size() == 1) {
+//                LOGGER.log(Level.FINE, "Provider with Name : {0} and ID : {1} is fine", new Object[]{provider.getName(), provider.getId()});
+//            } else {
+//                LOGGER.log(Level.FINE, "There are different providers with Name : {0}", provider.getName());
+//                ServiceProvider newName = new ServiceProvider();
+//                for (ServiceProvider sameName : sameNames) {
+//                    LOGGER.log(Level.FINER, "Provider with ID : {0} has the Name : {0}", new Object[]{provider.getId(),provider.getName()});
+//                    
+//                }
+//            }
+//            String name = URLExtracter.getDomainName(provider.getUrl());
+//            provider.setName(name);
+//            providerDAO.saveOrUpdate(provider);
         }
     }
 }
