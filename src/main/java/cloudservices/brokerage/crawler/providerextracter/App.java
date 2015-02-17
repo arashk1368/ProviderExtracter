@@ -52,7 +52,9 @@ public class App {
             fixProviders(providerDAO);
 
             for (ServiceDescription serviceDesc : serviceDescDAO.getWithoutProvider()) {
+                LOGGER.log(Level.FINE, "Service Description with ID : {0} Does not have provider, Updating", serviceDesc.getId());
                 String name = URLExtracter.getDomainName(serviceDesc.getUrl());
+                LOGGER.log(Level.FINE, "URL : {0} Name : {1}", new Object[]{serviceDesc.getUrl(), name});
                 ServiceProvider provider = new ServiceProvider();
                 provider.setNumberOfServices(1);
                 provider.setName(name);
@@ -132,9 +134,11 @@ public class App {
     }
 
     private static void fixProviders(ServiceProviderDAO providerDAO) throws DAOException, URISyntaxException {
-        List<ServiceProvider> providers = providerDAO.getAll("ServiceProvider");
+        LOGGER.log(Level.INFO, "Fixing Providers Start");
+        List<ServiceProvider> providers = providerDAO.getWithoutName();
         for (ServiceProvider provider : providers) {
             if (provider.getName().isEmpty()) {
+                LOGGER.log(Level.FINE, "Provider with ID : {0} Does name have updating name from URL : {1}", new Object[]{provider.getId(), provider.getUrl()});
                 String name = URLExtracter.getDomainName(provider.getUrl());
                 provider.setName(name);
                 providerDAO.saveOrUpdate(provider);
