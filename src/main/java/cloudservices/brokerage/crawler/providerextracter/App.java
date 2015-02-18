@@ -53,15 +53,20 @@ public class App {
 //            fixSameNameProviders(providerDAO);
             for (ServiceDescription serviceDesc : serviceDescDAO.getWithoutProvider()) {
                 LOGGER.log(Level.FINE, "Service Description with ID : {0} Does not have provider, Updating", serviceDesc.getId());
-                String name = URLExtracter.getDomainName(serviceDesc.getUrl());
-                LOGGER.log(Level.FINE, "URL : {0} Name : {1}", new Object[]{serviceDesc.getUrl(), name});
-                ServiceProvider provider = new ServiceProvider();
-                provider.setNumberOfServices(1);
-                provider.setName(name);
-                serviceDesc.setServiceProvider(addOrUpdateProvider(provider, providerDAO));
-                serviceDescDAO.saveOrUpdate(serviceDesc);
+                String name;
+                try {
+                    name = URLExtracter.getDomainName(serviceDesc.getUrl());
+                    LOGGER.log(Level.FINE, "URL : {0} Name : {1}", new Object[]{serviceDesc.getUrl(), name});
+                    ServiceProvider provider = new ServiceProvider();
+                    provider.setNumberOfServices(1);
+                    provider.setName(name);
+                    serviceDesc.setServiceProvider(addOrUpdateProvider(provider, providerDAO));
+                    serviceDescDAO.saveOrUpdate(serviceDesc);
+                } catch (URISyntaxException ex) {
+                    LOGGER.log(Level.INFO, "ID : " + serviceDesc.getId() + " does not have a valid URL : " + serviceDesc.getUrl(), ex);
+                }
             }
-        } catch (DAOException | URISyntaxException ex) {
+        } catch (DAOException ex) {
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         } finally {
             BaseDAO.closeSession();
